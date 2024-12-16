@@ -1,13 +1,10 @@
 const express = require('express');
 const app = express();
-
-// Serve embed-friendly pages
 app.get('/embed', (req, res) => {
     const { url } = req.query;
     if (!url) {
         return res.status(400).send('Missing image URL');
     }
-
     res.setHeader('Content-Type', 'text/html');
     res.send(`
         <!DOCTYPE html>
@@ -29,6 +26,5 @@ app.get('/embed', (req, res) => {
     `);
 });
 
-// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
