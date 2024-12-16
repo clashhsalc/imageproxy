@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 export const config = {
   api: {
     responseLimit: false,
+    bodyParser: false,
   },
 }
 
@@ -10,10 +11,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
-
   const imageUrl = req.query.url as string
   if (!imageUrl) {
     return res.status(400).json({ error: 'URL parameter required' })
