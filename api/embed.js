@@ -1,41 +1,57 @@
-// Use native fetch (Node.js 18+) or node-fetch if required
-import fetch from 'node-fetch'; // If on Node.js 18+, you can use global fetch
+const fetch = require('node-fetch');
+const url = require('url');
 
-export default async function handler(req, res) {
-    const { url } = req.query;
+module.exports = async function handler(req, res) {
+    // Set CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+    const { url: imageUrl } = req.query;
 
     // Check if URL is provided
-    if (!url) {
-        return res.status(400).send('Missing image URL.');
+    if (!imageUrl) {
+        return res.status(400).json({ error: 'Missing image URL parameter' });
+    }
+
+    // Validate URL
+    try {
+        new URL(imageUrl);
+    } catch (e) {
+        return res.status(400).json({ error: 'Invalid URL format' });
     }
 
     try {
-        // Fetch the image from the provided URL
-        const response = await fetch(url);
+        // Fetch the image
+        const response = await fetch(imageUrl);
 
-        // Check if the fetch was successful
         if (!response.ok) {
-            return res.status(response.status).send('Failed to fetch the image.');
+            return res.status(response.status).json({ 
+                error: `Failed to fetch image: ${response.statusText}` 
+            });
         }
 
-        // Get the content type to ensure it's an image
+        // Verify content type
         const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.startsWith('image')) {
-            return res.status(400).send('The URL does not point to a valid image.');
+        if (!contentType || !contentType.startsWith('image/')) {
+            return res.status(400).json({ 
+                error: 'URL does not point to a valid image' 
+            });
         }
 
-        // Set headers to serve the image
+        // Set response headers
         res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'");
 
-        // Stream the image to the response
-        response.body.on('error', (err) => {
-            console.error('Stream error:', err);
-            res.status(500).send('Error streaming the image.');
+        // Stream the response
+        await new Promise((resolve, reject) => {
+            response.body.pipe(res)
+                .on('error', reject)
+                .on('finish', resolve);
         });
 
-        response.body.pipe(res);
     } catch (error) {
-        console.error('Error fetching the image:', error);
-        res.status(500).send('Internal Server Error.');
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
-}
+};
