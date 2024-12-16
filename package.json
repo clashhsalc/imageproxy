@@ -1,0 +1,8 @@
+{
+    "name": "embed-image-server",
+    "version": "1.0.0",
+    "scripts": {
+      "start": "vercel dev"
+    }
+  }
+  

@@ -1,10 +1,10 @@
-const express = require('express');
-const app = express();
-app.get('/embed', (req, res) => {
+export default function handler(req, res) {
     const { url } = req.query;
+
     if (!url) {
         return res.status(400).send('Missing image URL');
     }
+
     res.setHeader('Content-Type', 'text/html');
     res.send(`
         <!DOCTYPE html>
@@ -13,7 +13,7 @@ app.get('/embed', (req, res) => {
             <meta property="og:type" content="website">
             <meta property="og:title" content="Embedded Image">
             <meta property="og:image" content="${url}">
-            <meta property="og:url" content="${req.protocol}://${req.get('host')}${req.originalUrl}">
+            <meta property="og:url" content="${req.headers.host}${req.url}">
             <meta property="og:description" content="Shareable embedded image link">
             <meta name="twitter:card" content="summary_large_image">
             <title>Image Embed</title>
@@ -24,7 +24,4 @@ app.get('/embed', (req, res) => {
         </body>
         </html>
     `);
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
+}
