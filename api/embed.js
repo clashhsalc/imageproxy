@@ -1,27 +1,31 @@
-export default function handler(req, res) {
+import fetch from 'node-fetch'; // Vercel supports node-fetch by default
+
+export default async function handler(req, res) {
     const { url } = req.query;
 
     if (!url) {
         return res.status(400).send('Missing image URL');
     }
 
-    res.setHeader('Content-Type', 'text/html');
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta property="og:type" content="website">
-            <meta property="og:title" content="Embedded Image">
-            <meta property="og:image" content="${url}">
-            <meta property="og:url" content="${req.headers.host}${req.url}">
-            <meta property="og:description" content="Shareable embedded image link">
-            <meta name="twitter:card" content="summary_large_image">
-            <title>Image Embed</title>
-        </head>
-        <body>
-            <h1>Embedded Image</h1>
-            <img src="${url}" alt="Embedded Image" style="max-width: 100%;">
-        </body>
-        </html>
-    `);
+    try {
+        // Fetch the image from the given URL
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            return res.status(400).send('Unable to fetch the image.');
+        }
+
+        // Get the image's content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.startsWith('image')) {
+            return res.status(400).send('The URL does not point to an image.');
+        }
+
+        // Set the appropriate content headers and stream the image
+        res.setHeader('Content-Type', contentType);
+        response.body.pipe(res);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error fetching the image.');
+    }
 }
