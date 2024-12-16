@@ -2,15 +2,8 @@
     "version": 2,
     "routes": [
       {
-        "src": "/api/embed",
-        "dest": "/api/embed.js"
-      }
-    ],
-    "builds": [
-      {
-        "src": "api/embed.js",
-        "use": "@vercel/node"
+        "src": "/api/image",
+        "dest": "/api/image.js"
       }
     ]
   }
-  
