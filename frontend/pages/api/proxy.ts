@@ -17,7 +17,7 @@ export default async function handler(
   }
 
   try {
-    const response = await fetch(imageUrl)
+    const response = await fetch(imageUrl, { redirect: 'follow' })
     if (!response.ok) {
       return res.status(response.status).json({ error: response.statusText })
     }
@@ -29,12 +29,16 @@ export default async function handler(
 
     res.setHeader('Content-Type', contentType)
     res.setHeader('Cache-Control', 'public, max-age=86400')
-    res.setHeader('Access-Control-Allow-Origin', '*')
-
-    const data = await response.arrayBuffer()
-    res.send(Buffer.from(data))
+    if (!response.body) {
+      return res.status(500).json({ error: 'No response body' })
+    }
+    await response.body.pipeTo(new WritableStream({
+      write(chunk) {
+        res.write(chunk)
+      },
+    }))
+    res.end()
   } catch (error) {
-    console.error('Error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }
